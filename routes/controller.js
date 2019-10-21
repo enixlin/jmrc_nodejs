@@ -21,36 +21,59 @@ router.all('/showUser', function(req, res, next) {
     var excel = new excelService("header11.xls", "new sheet");
 
     let settle_i = new settleService();
-    settle_i.getBusyRecord(function(result) {
-        let data = [];
-        let row = [];
-        if (result.length > 0) {
-            for (let col in result[0]) {
-                row.push(col);
-            }
-            data.push(row);
-        }
-        for (let n in result) {
-            row = [];
-            for (let e in result[n]) {
-                row.push(result[n][e] + "");
-            }
-            data.push(row);
-        }
-        excel.fillData(data);
-
-
-        excel.save();
+    // let p = settle_i.getSettleRangeProduct();
+    // settle_i.getSettleRangeProduct().then(settle_i.getUnitSettlePerformance(r)).then(function(re) {
+    //     res.send(re);
+    // });
+    settle_i.getSettleRangeProduct().then(settle_i.getUnitSettlePerformance([result.products, "20190101", "20190930"])).then(function(re) {
+        res.send(re);
     });
-
-    //excel.save();
-    // let workbook = new excels.Workbook();
-    // workbook.addWorksheet("testSheet");
-    // workbook.csv.writeFile("public/textExcel.xls");
-    res.send("done");
-
-
 });
+
+// Promise.all([p]).then(function(result) {
+//     var products = result[0].products;
+//     settle_i.getUnitSettlePerformance([products, "20190101", "20190930"]).then(function(r) {
+//         res.send(r.rows);
+//     });
+// });
+
+
+
+// Promise.all([p]).then(function(result) {
+//     res.send(result);
+// });
+// console.log(p);
+
+// settle_i.
+// let params={["汇入汇款"],"20190101","20190930"}
+// settle_i.getBusyRecord(function(result) {
+//     let data = [];
+//     let row = [];
+//     if (result.length > 0) {
+//         for (let col in result[0]) {
+//             row.push(col);
+//         }
+//         data.push(row);
+//     }
+//     for (let n in result) {
+//         row = [];
+//         for (let e in result[n]) {
+//             row.push(result[n][e] + "");
+//         }
+//         data.push(row);
+//     }
+//     excel.fillData(data);
+//     excel.save();
+
+
+//excel.save();
+// let workbook = new excels.Workbook();
+// workbook.addWorksheet("testSheet");
+// workbook.csv.writeFile("public/textExcel.xls");
+// res.send("done");
+
+
+// });
 
 
 
