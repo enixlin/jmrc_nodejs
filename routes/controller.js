@@ -5,6 +5,7 @@ var settleService = require("./../service/SettleService");
 var excelService = require("./../service/ExcelService");
 var User = require('./../service/userService');
 var mysqlService = require('./mysqlService');
+var tool = require('./../utils/utils');
 
 router.all('/', function(req, res, next) {
 
@@ -19,14 +20,21 @@ router.all('/', function(req, res, next) {
 router.all('/showUser', function(req, res, next) {
     // excelService.constructor("exclefile", "new Sheet");
     var excel = new excelService("header11.xls", "new sheet");
-
+    var tools = new tool();
     let settle_i = new settleService();
-    // let p = settle_i.getSettleRangeProduct();
-    // settle_i.getSettleRangeProduct().then(settle_i.getUnitSettlePerformance(r)).then(function(re) {
-    //     res.send(re);
-    // });
-    settle_i.getSettleRangeProduct().then(settle_i.getUnitSettlePerformance([result.products, "20190101", "20190930"])).then(function(re) {
-        res.send(re);
+
+    settle_i.getSettleRangeProduct().then(function(result) {
+        let products = result.products;
+
+        let start_current = req.param("start");
+        let end_current = req.param("end");
+        let start_pre = tools.compareDate(start_current);
+        let end_pre = tools.compareDate(end_current);
+        let p1 = settle_i.getUnitSettlePerformance([products, start_current, end_current]);
+        let p2 = settle_i.getUnitSettlePerformance([products, start_pre, end_pre]);
+        return Promise.all([p1, p2]);
+    }).then(function(ee) {
+        res.send(ee);
     });
 });
 

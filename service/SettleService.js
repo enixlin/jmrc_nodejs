@@ -1,9 +1,10 @@
 var mysql = require('./mysqlService');
 
+
 var conn = mysql.connection();
 class settleService {
     constructor() {
-        // this.connection = mysql.connection();
+        //this.connection = mysql.connection();
     };
 
     getLastBusyDate(cb) {
@@ -34,7 +35,6 @@ class settleService {
      */
     getUnitSettlePerformance(params) {
         return new Promise(function(resolve, reject) {
-
             let sqlString =
                 " select belong_Branch_Code as 行号," +
                 //" select " +
@@ -48,7 +48,12 @@ class settleService {
                 " busy_date>=? and busy_date<=?" +
                 " group by 行号 ";
             conn.query(sqlString, params, function(err, rows, fields) {
-                resolve({ err, rows, fields });
+                if (err) {
+
+                    resolve(err);
+                } else {
+                    resolve({ err, rows, fields });
+                }
             });
 
         });
@@ -59,12 +64,11 @@ class settleService {
      */
     getSettleRangeProduct() {
         return new Promise(function(resolve, reject) {
-
             let sqlString =
                 "select name from product where settleRange=1";
             conn.query(sqlString, function(err, rows, fields) {
                 if (err) {
-                    resolve({ err });
+                    resolve(err);
                 } else {
                     let products = [];
                     for (let e in rows) {
