@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <script src="node_modules\vue\dist\vue.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="node_modules\element-ui\lib\theme-chalk\index.css">
+    <!-- 引入组件库 -->
+    <script src="node_modules/element-ui/lib/index.js"></script>
+</head>
+
+<body>
+
+    <div id="div1">{{msg}}
+        <el-button id='btn' v-on:click="fd">{{msg }}</el-button>
+    </div>
+    <script>
+        var button = new Vue({
+            el: "#div1",
+            data: {
+                msg: "this is a div"
+            },
+            methods: {
+                fd: function() {
+                    alert("alert");
+                }
+            }
+
+
+            // template: "<input type=button  value = 'button' >"
+        });
+
+
+
+
+        function fd() {
+            alert("alert");
+        }
+    </script>
+</body>
+
+</html>

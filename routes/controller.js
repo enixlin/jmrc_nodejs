@@ -16,6 +16,9 @@ router.all('/', function(req, res, next) {
     });
 
 });
+router.all('/index', function(req, res, next) {
+    res.render("index");
+});
 
 router.all('/showUser', function(req, res, next) {
     // excelService.constructor("exclefile", "new Sheet");
@@ -25,7 +28,6 @@ router.all('/showUser', function(req, res, next) {
 
     settle_i.getSettleRangeProduct().then(function(result) {
         let products = result.products;
-
         let start_current = req.param("start");
         let end_current = req.param("end");
         let start_pre = tools.compareDate(start_current);
