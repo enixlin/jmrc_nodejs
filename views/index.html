@@ -6,41 +6,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <script src=""></script>
+    <script src="/node_modules/_vue@2.6.10@vue/dist/vue.js"></script>
+    <script src="/node_modules/vuex/dist/vuex.js"></script>
+    <script src="/node_modules/_element-ui@2.12.0@element-ui/lib/index.js"></script>
+    <link href="/node_modules/_element-ui@2.12.0@element-ui/lib/theme-chalk/index.css"></link>
+    <!-- <script src="/data.js"></script> -->
+    <script src="/node_modules/axios/dist/axios.js"></script>
 
-    <script src="node_modules\vue\dist\vue.js"></script>
-    <!-- 引入样式 -->
-    <link rel="stylesheet" href="node_modules\element-ui\lib\theme-chalk\index.css">
-    <!-- 引入组件库 -->
-    <script src="node_modules/element-ui/lib/index.js"></script>
+
+
+    <style>
+        ul li {
+            margin: 10px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        
+        ul li.active {
+            background-color: #666fff;
+        }
+    </style>
 </head>
 
 <body>
-
-    <div id="div1">{{msg}}
-        <el-button id='btn' v-on:click="fd">{{msg }}</el-button>
+    <div id=app>
     </div>
     <script>
-        var button = new Vue({
-            el: "#div1",
-            data: {
-                msg: "this is a div"
+        // 如果在模块化构建系统中，请确保在开头调用了 Vue.use(Vuex)
+
+        let busVm = new Vue();
+
+        const store = new Vuex.Store({
+            state: {
+                branchName: ""
             },
+            mutations: {
+                increment(state) {
+                    state.count++
+                },
+                show(state, e) {
+
+                    state.branchName = e.branchName;
+                }
+            }
+        });
+        let Myli = Vue.component('child', {
+            data() {
+                return {
+                    msg: "child msg",
+                    branch: [11, 23],
+                    currentIndex: 0
+                }
+            },
+            template: `<div>
+            <ul>
+               <li  v-for="(item, index) in branch" @click='getinfo(index)' :class='{active:currentIndex===index}' >{{item.行号}}{{item.行名}}{{item.金额}} </li>
+                </ul></div>`,
+            mounted() {
+
+
+                let branch = this.branch;
+                axios.get('http://localhost:3000/showUser?start=20190101&end=20190530')
+                    .then(function(result) {
+                        //console.log(result);
+                        this.branch = result.data[0].rows;
+
+                    }.bind(this))
+                    .catch(function(error) { // 请求失败处理
+                        console.log(error);
+                    });
+            },
+            // created() {
+            //     console.log("get in create()");
+            //     axios.get('http://localhost:3000/showUser?start=20190101&end=20190530')
+            //         .then(response => (this.branchInfo = response[0].rows))
+            //         .catch(function(error) { // 请求失败处理
+            //             console.log(error);
+            //         });
+            // },
+
             methods: {
-                fd: function() {
-                    alert("alert");
+                getinfo(index) {
+
+                    this.currentIndex = index;
+                    let branchName = this.branch[index];
+                    store.commit('show', {
+                        branchName: branchName
+                    });
+
+                },
+                getData() {
+                    console.log("get in getData()");
+                    axios.get('http://localhost:3000/showUser?start=20190101&end=20190530')
+                        .then(response => (this.branchInfo = response[0].rows))
+                        .catch(function(error) { // 请求失败处理
+                            console.log(error);
+                        });
                 }
             }
 
-
-            // template: "<input type=button  value = 'button' >"
         });
 
 
 
+        let App = {
+            template: `<div >这是主入口组件y </div>`
+        };
 
-        function fd() {
-            alert("alert");
-        }
+        new Vue({
+            el: "#app",
+            // mounted: function() {
+            //     busVm.$on('changeEvent', function(name) {
+            //         this.branchName = name;
+            //     }.bind(this));
+            // },
+            data() {
+                return {
+                    msg: "msg",
+                    // branchName: ""
+
+                }
+            },
+            computed: {
+                branchName: function() {
+                    return store.state.branchName;
+                }
+            },
+            components: {
+                //App,
+                // child
+                Myli
+            },
+
+            template: `<div > 当前选择的:{{branchName.行名}}<child /></div>`
+
+        });
     </script>
 </body>
 
