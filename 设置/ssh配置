@@ -1,0 +1,31 @@
+vscode win10 ssh连接 && 解决Bad owner or permissions
+原创Kevinrsa 发布于2019-07-06 19:32:26 阅读数 2302  收藏
+展开
+vscode win10 ssh连接 && 解决Bad owner or permissions
+参考官方的文档进行操作：https://code.visualstudio.com/docs/remote/ssh#_getting-started
+
+生成本地私钥和公钥之后，利用ssh-copy-id命令将公钥拷贝到远程主机上
+
+配置config文件【可选】
+
+点击连接即可
+
+解决 Bad owner or permissions 问题：
+
+Bad owner or permissions 即对某个文件没有访问权限，原因是 Windows 10 version 1803 自带了openssh客户端，自带的客户端存在这个问题
+
+vscode的官方文档也给出了相应的解决方式，参考 Local SSH file and folder permissions]
+
+但是在执行的过程中 Install-Module -Force OpenSSHUtils -Scope AllUsers 出错，提示没有安装包源，Google之后并没有找到正确的解决方法。
+
+个人本机有安装git， 携带相应的openssh-client， 故想到将openssh-cllient 指向为git软件中的ssh
+打开Git Bash查看ssh可执行文件的安装路径：where ssh.exe
+
+c盘路径即为windows自带的ssh-client。将其卸载掉，参考 mircosoft官方的介绍卸载 OpenSSH-Client
+
+然后将git软件携带相应的openssh-client可执行文件路径设置到系统的环境变量中。
+
+点赞 1
+————————————————
+版权声明：本文为CSDN博主「Kevinrsa」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/TongxinV/article/details/94883101
