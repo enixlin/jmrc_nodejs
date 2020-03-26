@@ -32,8 +32,10 @@ class Mysql {
     return new Promise(resolve => {
       conn.query(sql, params, (err, rs) => {
         if (err) {
+          me.pool.releaseConnection(conn);
           return resolve(err);
         } else {
+          me.pool.releaseConnection(conn);
           return resolve(rs);
         }
       });

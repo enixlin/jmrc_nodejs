@@ -204,7 +204,6 @@ export default {
       this.userInfo.password_old = "";
       this.userInfo.password_new = "";
       this.userInfo.password_new_confirm = "";
-      console.log(index);
     },
 
     /*  */

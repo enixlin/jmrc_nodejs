@@ -26,6 +26,24 @@ class SettlementSerive {
   }
 
   /**
+   * 取得国际结算量数据的最近日期
+   */
+  async getSettleRecordDate() {
+    let sql =
+      "select busy_date from settle_record  group by busy_date order by busy_date desc limit 1";
+    return await this.query(sql, "");
+  }
+
+  /**
+   * 取得指定日期的国际结算任务量
+   * @param {任务日期} date
+   */
+  async getTotalSettleTask(date) {
+    let sql = "select sum(task_amount) as task from settle_task where expiry=?";
+    return await this.query(sql, [date]);
+  }
+
+  /**
    * 取得全行各个国际结算产品的结算量
    getTotalRangeProductSettlement
 
@@ -107,7 +125,7 @@ class SettlementSerive {
       "  group by product_name   " +
       "  ) p   " +
       "  on c.product_name=p.product_name )";
-    return this.query(sql, [
+    return await this.query(sql, [
       start,
       end,
       [product],
@@ -208,7 +226,7 @@ class SettlementSerive {
       " on c.belong_branch_code=p.belong_branch_code  " +
       " ) ";
 
-    return this.query(sql, [
+    return await this.query(sql, [
       start,
       end,
       [product],
@@ -249,7 +267,7 @@ class SettlementSerive {
       " settle_record    " +
       " where     " +
       "  busy_date>=? and busy_date<=? and product_name in ?   " +
-      "  group by month   ) c" +
+      "  group by month  ) c" +
       "  left join  " +
       " ( select " +
       " left(date_format(date_add(busy_date,interval  +1 YEAR),'%Y%m%d' ),6) as month, " +
@@ -261,11 +279,18 @@ class SettlementSerive {
       "  busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' ) " +
       " and busy_date <=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )" +
       " and product_name in ? " +
-      "  group by month   ) p " +
+      "  group by month    ) p " +
       "  on c.month=p.month " +
-      "  order by month desc " +
+      "  order by month asc " +
       "";
-    return this.query(sql, [start, end, [product], start, end, [product]]);
+    return await this.query(sql, [
+      start,
+      end,
+      [product],
+      start,
+      end,
+      [product]
+    ]);
   }
 
   /**
@@ -280,11 +305,38 @@ class SettlementSerive {
     }
     console.log(product);
     let sql =
-      "select  " +
-      "   convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount " +
-      " from " +
-      "   settle_record  where busy_date>=? and busy_date<=? and product_name in ? ";
-    return this.query(sql, [start, end, [product]]);
+      "  select  " +
+      "     case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c,  " +
+      "     case when p.amount is null or p.amount=0 then 0 else p.amount end amount_p " +
+      "  from  " +
+      "     (  " +
+      "         select   " +
+      "             convert(sum(usd_rate *busy_amount),decimal(15,2)) as amount   " +
+      "         from   " +
+      "             settle_record " +
+      "         where " +
+      "             busy_date>=? and busy_date<=? and product_name in ? " +
+      "     ) c " +
+      "  left join  " +
+      "    (  " +
+      "         select   " +
+      "             convert(sum(usd_rate *busy_amount),decimal(15,2)) as amount   " +
+      "         from   " +
+      "             settle_record " +
+      "         where " +
+      "             busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' ) " +
+      "             and busy_date<=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' ) " +
+      "             and product_name in ? " +
+      "     ) p " +
+      "    on 1=1";
+    return await this.query(sql, [
+      start,
+      end,
+      [product],
+      start,
+      end,
+      [product]
+    ]);
   }
 
   /**
@@ -338,7 +390,7 @@ class SettlementSerive {
       "     group by belong_branch_code   " +
       " ) p   " +
       " on c.belong_branch_code=p.belong_branch_code  ";
-    return this.query(sql, [
+    return await this.query(sql, [
       start,
       end,
       [product],
@@ -396,7 +448,7 @@ class SettlementSerive {
       " on c.month=p.month " +
       " order by month desc " +
       "";
-    return this.query(sql, [
+    return await this.query(sql, [
       start,
       end,
       [product],
@@ -508,7 +560,7 @@ class SettlementSerive {
       " on c.cust_number=p.cust_number  " +
       " ) ";
 
-    return this.query(sql, [
+    return await this.query(sql, [
       start,
       end,
       [product],
@@ -622,7 +674,7 @@ class SettlementSerive {
       " on c.product_name=p.product_name  " +
       " ) ";
 
-    return this.query(sql, [
+    return await this.query(sql, [
       start,
       end,
       [product],
@@ -697,7 +749,7 @@ class SettlementSerive {
       " ) p " +
       " on c.cust_number=p.cust_number ";
 
-    return this.query(sql, [
+    return await this.query(sql, [
       start,
       end,
       [product],
@@ -764,7 +816,7 @@ class SettlementSerive {
       "  order by month desc " +
       "";
 
-    return this.query(sql, [
+    return await this.query(sql, [
       start,
       end,
       [product],
@@ -870,7 +922,7 @@ class SettlementSerive {
       " on c.product_name=p.product_name  " +
       " ) ";
 
-    return this.query(sql, [
+    return await this.query(sql, [
       start,
       end,
       [product],
@@ -932,16 +984,16 @@ class SettlementSerive {
   }
 
   //国际结算量统计口径产品
-  getSettleRangeProducts() {
+  async getSettleRangeProducts() {
     let sql = "select *  from product where settleRange='1' ";
     let params = [];
-    return this.query(sql, params);
+    return await this.query(sql, params);
   }
 
-  getSettleRangeProductsName() {
+  async getSettleRangeProductsName() {
     let sql = "select  name  from product where settleRange='1' ";
     let params = [];
-    return this.query(sql, params);
+    return await this.query(sql, params);
   }
 
   async getMonthPerformance(start, end) {
@@ -969,7 +1021,7 @@ class SettlementSerive {
 */
   async getExchangeRangeProductsName() {
     let sql = "select name from settle_record where settleRange='2'";
-    return this.query(sql, "");
+    return await this.query(sql, "");
   }
 }
 

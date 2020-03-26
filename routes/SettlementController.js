@@ -5,10 +5,25 @@ var SettlementService = new ss();
 
 /////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////
+
+//取得国际结算量数据的最近日期
+router.all("/getSettleRecordDate", async (req, res, next) => {
+  res.send(await SettlementService.getSettleRecordDate());
+});
+
+//取得全行的国际结算量任务量
+router.all("/getTotalSettleTask", async (req, res, next) => {
+  console.log("end ");
+  console.log(req.body.end);
+
+  let end = req.body.end.substring(0, 4);
+  res.send(await SettlementService.getTotalSettleTask(end));
+});
+
 //取得全行的国际结算量
 router.all("/getTotalSettle", async (req, res, next) => {
-  let start = req.query.start;
-  let end = req.query.end;
+  let start = req.body.start;
+  let end = req.body.end;
   console.log(start);
   console.log(end);
   res.send(await SettlementService.getTotalSettle(start, end));
@@ -24,16 +39,16 @@ router.all("/getTotalUnitSettle", async (req, res, next) => {
 
 // 取得全行国际结算量分月统计量;
 router.all("/getTotalMonthSettle", async (req, res, next) => {
-  let start = req.query.start;
-  let end = req.query.end;
+  let start = req.body.start;
+  let end = req.body.end;
   console.log(start);
   console.log(end);
   res.send(await SettlementService.getTotalMonthSettle(start, end));
 });
 // 取得全行各国际结算产品的统计量;
 router.all("/getTotalRangeProductSettlement", async (req, res, next) => {
-  let start = req.query.start;
-  let end = req.query.end;
+  let start = req.body.start;
+  let end = req.body.end;
   res.send(await SettlementService.getTotalRangeProductSettlement(start, end));
 });
 

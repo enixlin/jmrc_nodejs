@@ -34,8 +34,7 @@ import menutree from "./Main/MenuTree.vue";
 import eventBus from "./../Utils/EventBus.js";
 import useradmin from "./User/Admin.vue";
 import configRangeProduct from "./Settlement/ConfigRangeProduct.vue";
-
-//import navigationItem from "./navigationItem.vue";
+import settlement from "./Settlement/Settlement.vue";
 
 export default {
   data() {
@@ -50,7 +49,8 @@ export default {
   components: {
     menutree: menutree,
     useradmin: useradmin,
-    configRangeProduct: configRangeProduct
+    configRangeProduct: configRangeProduct,
+    settlement: settlement
   },
 
   created() {},
@@ -147,7 +147,7 @@ export default {
   height: 700px;
 }
 .menu {
-  width: 15%;
+  width: 200px;
   height: 600px;
   float: left;
   /* background: #cbcbcb; */
@@ -155,7 +155,7 @@ export default {
   border: 1px solid blue;
 }
 .tab {
-  width: 84%;
+  width: 1130px;
   height: 600px;
   float: left;
   border: 1px solid blue;

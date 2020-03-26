@@ -5,6 +5,8 @@ import "element-ui/lib/theme-chalk/index.css";
 import Vuex from "vuex";
 import VueRouter from "vue-router";
 import axios from "axios";
+import "normalize.css";
+import echarts from "echarts";
 
 Vue.config.productionTip = false;
 
@@ -12,6 +14,7 @@ Vue.use(ElementUI);
 Vue.use(axios);
 Vue.use(Vuex);
 Vue.use(VueRouter);
+Vue.use(echarts);
 
 const Routers = [
   {
@@ -57,5 +60,6 @@ new Vue({
   router: router,
   axios: axios,
   store: store,
+  echarts: echarts,
   render: h => h(App)
 }).$mount("#app");
