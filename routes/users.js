@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 var express = require("express");
 var router = express.Router();
 var mysql = require("mysql");
@@ -22,6 +23,14 @@ router.all("/getusers", function(req, res, next) {
 
 router.get("/", function(req, res, next) {
   res.send("respond with a resource");
+=======
+var express = require('express');
+var router = express.Router();
+
+/* GET users listing. */
+router.get('/', function(req, res, next) {
+  res.send('respond with a resource');
+>>>>>>> a7f99fdf883d027c56c6b883ff88ae64289028b3
 });
 
 module.exports = router;

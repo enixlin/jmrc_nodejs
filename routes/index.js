@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 var express = require("express");
 var router = express.Router();
 var UserServie = require("./../service/UserService");
@@ -60,3 +61,19 @@ router.all("/testPromise", function(req, res, next) {
 
 //
 module.exports = router;
+=======
+var express = require('express');
+var mysql = require("mysql");
+var router = express.Router();
+var fs = require("fs");
+
+
+
+
+/* GET home page. */
+router.get('/', function(req, res, next) {
+    res.render('index', { title: 'Express' });
+});
+
+module.exports = router;
+>>>>>>> a7f99fdf883d027c56c6b883ff88ae64289028b3
