@@ -91,13 +91,14 @@
       <div id="progress" class="progress_circle">
         <el-progress
           type="circle"
-          style="margin-top:25px"
+          style="margin-top:25px
+          "
           :percentage="
-              number_format(
-                (this.totalSettle_c / 10000 / this.totalTask) * 100,
-                2
-              )
-            "
+            number_format(
+              (this.totalSettle_c / 10000 / this.totalTask) * 100,
+              2
+            )
+          "
         ></el-progress>
         <div style="width:120px;float:left;text-align:center;margin:5px 0px">
           <font color="black" size="5">完成率</font>
@@ -118,8 +119,11 @@
         :row-style="{ height: '30px' }"
         :cell-style="{ padding: 0 }"
         :stripe="true"
-        height="480px"
+        height="450px"
+        show-summary="this.showsummary"
+        :summary-method="getSummaries"
         :highlight-current-row="true"
+        ref="table"
         style="width: 510px;  overflow: auto;font-size: 8px ;text-align:center;"
         border
       >
@@ -205,13 +209,18 @@
         </el-table-column>
       </el-table>
     </div>
+    <window v-for="(item ,index) in windows" :key="index"></window>
   </div>
-  <!--全行业务 模板完结  -->
 </template>
+
+<!--全行业务 模板完结  -->
 
 <script>
 import axios from "axios";
 import echarts from "echarts";
+import window from "./Win";
+import eventBus from "./../../Utils/EventBus";
+
 export default {
   data() {
     return {
@@ -223,13 +232,42 @@ export default {
       totalMonth: "",
       totalSettle_c: "",
       productsSettle: "",
-      totalSettle_p: ""
+      totalSettle_p: "",
+      showsummary: "false",
+      windows: [],
+      activeWindow: ""
     };
   },
-
+  mounted() {
+    let me = this;
+    eventBus.$on("closeWindow", function(arg) {
+      me.removeWindow(arg);
+    });
+  },
+  components: {
+    window: window
+  },
+  created: {},
   methods: {
+    removeWindow(title) {
+      console.log("close window");
+
+      let windows = this.editableTabs;
+      let activewindow = this.activeWindow;
+      if (activewindow === title) {
+        windows.forEach((win, index) => {
+          if (win.name === title) {
+            let nextWin = win[index + 1] || win[index - 1];
+            if (nextWin) {
+              activewindow = nextWin.name;
+            }
+          }
+        });
+      }
+    },
+
     exportTable() {
-      alert("exporttabel");
+      // this.dialogshow = true;
     },
     /**
      * 当选择层次为全时，按查询按钮执行的操作
@@ -311,7 +349,12 @@ export default {
           data: ["当年", "去年同期"],
           selected: ["当年", "去年同期"]
         },
-        tooltip: {},
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross"
+          }
+        },
         axisPointer: {
           show: true,
           link: { xAxisIndex: "all" },
@@ -361,7 +404,65 @@ export default {
     },
     //查询办理该项产品的所有客户
     total_product_client(index, row) {
-      console.log(row);
+      console.log(row, index);
+      this.windows.push(row);
+      console.log(this.windows);
+
+      // this.product_client_dialogs.push(row);
+      // this.dialogshow = true;
+      // console.log(this.product_client_dialogs);
+    },
+
+    first() {
+      this.style.zIndex = 100;
+    },
+
+    /**
+     * 自定义合并行计算
+     */
+    getSummaries(param) {
+      console.log("param", param);
+
+      if (param.data == "") {
+        return;
+      }
+      const { columns, data } = param;
+      const sums = [];
+      this.$nextTick(() => {
+        this.$refs.table.doLayout();
+      });
+      this.showsummary = true;
+      columns.forEach((column, index) => {
+        if (index === 0) {
+          sums[index] = "合计";
+          return;
+        }
+        if (index === 0 || index === 5) {
+          sums[index] = "";
+          return;
+        }
+        const values = data.map(item => Number(item[column.property]));
+        if (!values.every(value => isNaN(value))) {
+          sums[index] = values.reduce((prev, curr) => {
+            const value = Number(curr);
+            if (!isNaN(value)) {
+              return prev + curr;
+            } else {
+              return prev;
+            }
+          }, 0);
+          if (index === 2 || index === 4) {
+            sums[index] = this.number_format(sums[index] / 10000, 2);
+          }
+          if (index === 1 || index === 3) {
+            sums[index] = this.number_format(sums[index], 0);
+          }
+        } else {
+          sums[index] = "";
+        }
+      });
+
+      return sums;
     },
 
     /**
@@ -395,10 +496,10 @@ export default {
 };
 </script>
 
-<style  scoped>
+<style scoped>
 .settleInfo {
   width: 430px;
-  margin: 5px 5px;
+  margin: 5px 1px;
   height: 235px;
   float: left;
   text-align: center;
@@ -454,18 +555,18 @@ export default {
   text-align: center;
 }
 .productTable {
-  width: 507px;
+  width: 502;
   background: rgb(231, 234, 236);
-  height: 482px;
+  height: 480px;
   float: left;
   font-size: xx-small;
-  margin: 5px 5px;
+  margin: 10px 1px;
   text-align: center;
 }
 .monthbarchart {
-  width: 595px;
-  height: 230px;
-  margin: 5px 5px;
+  width: 590px;
+  height: 250px;
+  margin: 2px 2px;
   background: rgb(231, 234, 236);
   float: left;
 }

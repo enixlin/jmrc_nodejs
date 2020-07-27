@@ -13,6 +13,7 @@
       <el-input v-model="start" placeholder="开始日期" class="input"></el-input>
       <el-input v-model="end" placeholder="结束日期" class="input"></el-input>
       <el-button type="primary" class="btn" @click="query">查询</el-button>
+      <el-button type="primary" class="btn" @click="query">new window</el-button>
       <el-tag type="warning">日期格式(年月日)：20190731</el-tag>
     </div>
 
@@ -37,9 +38,10 @@ export default {
     this.query();
   },
   components: {
-    total: total
-    unit: unit
+    total: total,
+    unit: unit,
     client: client
+    // window: window,
   },
   async mounted() {},
 
@@ -60,7 +62,6 @@ export default {
     changeLevel(value) {
       this.level = value;
       if (this.level == "全行") {
-        console.log(this.$refs.total);
         this.$refs.total.query(this.start, this.end);
       }
       if (this.level == "经营单位") {
@@ -88,6 +89,8 @@ export default {
 
 <style scoped>
 .main {
+  /* overflow: auto; */
+  margin: 2px;
 }
 
 .toolbar {

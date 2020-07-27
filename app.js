@@ -17,7 +17,7 @@ app.use(
     resave: true,
     //将session的过期时间设定为一小时
     cookie: { maxAge: 60 * 60 * 1000 },
-    saveUninitialized: true
+    saveUninitialized: true,
   })
 );
 
@@ -32,7 +32,7 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-// app.use(express.static(path.join(__dirname, "public")));
+// app.use(express.static(path.join(__dirname, "public/front/jmrc_front")));
 app.use(
   express.static(
     require("path").join(__dirname, "public/front/jmrc_front/dist")
@@ -57,12 +57,12 @@ app.use("/file", require("./routes/file"));
 app.use("/feature", checkAuth, require("./routes/feature"));
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};

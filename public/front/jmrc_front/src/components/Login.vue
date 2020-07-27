@@ -51,7 +51,7 @@ export default {
     // axios.get("/file").then(result => {
     //   this.images = result.data;
     // });
-    axios.get("/login/checkAuth").then(result => {
+    axios.post("https://linzhenhuan.net/login/checkAuth").then(result => {
       if (result.data.name != undefined) {
         this.$store.state.authUser.name = result.data.name;
         this.$store.state.authUser.id = result.data.id;
@@ -67,25 +67,27 @@ export default {
       this.user.password = sha256.hex(this.user.password);
       console.log(this.user.password);
 
-      axios.post("/login/authUser", this.user).then(result => {
-        console.log("/login/authUser result");
-        console.log(result.data);
-        let authUser = result.data;
-        if (authUser.name != undefined) {
-          this.$store.commit("login", authUser);
-          this.$router.push("/main");
-        } else {
-          this.$alert("用户名或密码错误,请重新输入", {
-            confirmButtonText: "确定"
-            // callback: action => {
-            //   this.$message({
-            //     // type: "info",
-            //     // message: `action: ${action}`
-            //   });
-            // }
-          });
-        }
-      });
+      axios
+        .post("https://linzhenhuan.net/login/authUser", this.user)
+        .then(result => {
+          console.log("/login/authUser result");
+          console.log(result.data);
+          let authUser = result.data;
+          if (authUser.name != undefined) {
+            this.$store.commit("login", authUser);
+            this.$router.push("main");
+          } else {
+            this.$alert("用户名或密码错误,请重新输入", {
+              confirmButtonText: "确定"
+              // callback: action => {
+              //   this.$message({
+              //     // type: "info",
+              //     // message: `action: ${action}`
+              //   });
+              // }
+            });
+          }
+        });
     }
   }
 };

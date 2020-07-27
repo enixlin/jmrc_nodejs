@@ -12,10 +12,12 @@
       <template v-if="item.children">
         <el-submenu class="submenu">
           <template slot="title">
-            <font color="orange" size="4">
-              <i :class="item.icon"></i>
-              {{item.name}}
-            </font>
+            <p align="left">
+              <font color="orange" size="4">
+                <i :class="item.icon"></i>
+                {{item.name}}
+              </font>
+            </p>
           </template>
           <menutree :data="item.children"></menutree>
         </el-submenu>
