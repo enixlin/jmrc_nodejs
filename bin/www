@@ -4,6 +4,7 @@
  * Module dependencies.
  */
 
+<<<<<<< HEAD
 var app = require("../app");
 var debug = require("debug")("jmrc-node:server");
 var http = require("http");
@@ -19,6 +20,22 @@ const httpsOption = {
 var port = normalizePort(process.env.PORT || "3000");
 app.set("port", port);
 var server = https.createServer(httpsOption, app).listen(443);
+=======
+var app = require('../app');
+<<<<<<< HEAD
+var debug = require('debug')('jmrc-node:server');
+=======
+var debug = require('debug')('jmrc-nodejs:server');
+>>>>>>> a7f99fdf883d027c56c6b883ff88ae64289028b3
+var http = require('http');
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+>>>>>>> ff525cd7e5718d690accc446ec90e34341248e75
 
 /**
  * Create HTTP server.
