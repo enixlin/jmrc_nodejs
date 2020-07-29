@@ -1,0 +1,11 @@
+11abb98 HEAD@{0}: reset: moving to HEAD@{1}
+ae5cddf HEAD@{1}: pull origin master: Merge made by the 'recursive' strategy.
+11abb98 HEAD@{2}: commit: legtop
+b8b59b5 HEAD@{3}: reset: moving to HEAD@{1}
+e65438f HEAD@{4}: commit (merge): legtop commit
+b8b59b5 HEAD@{5}: commit: 20200727
+56ffc9e HEAD@{6}: commit: seperate settlement module
+7cbd119 HEAD@{7}: reset: moving to HEAD@{1}
+ff525cd HEAD@{8}: commit (merge): jmrc_node@tencentYun
+7cbd119 HEAD@{9}: commit: commit
+e1216e1 HEAD@{10}: commit (initial): init
