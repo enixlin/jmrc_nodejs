@@ -4,19 +4,20 @@ var fs = require("fs");
 
 /* GET home page. */
 router.all("/", function(req, res, next) {
-  fs.readdir("./public/images", function(err, files) {
-    if (err) {
-      return console.error(err);
-    } else {
-      let filesPath = [];
-      files.forEach(function(file) {
-        filesPath.push({ src: "/images/" + file });
-      });
+    // 这里的路径是nodejs 里的public
+    fs.readdir("./public/images", function(err, files) {
+        if (err) {
+            return console.error(err);
+        } else {
+            let filesPath = [];
+            files.forEach(function(file) {
+                filesPath.push({ src: "/images/" + file });
+            });
 
-      console.log(filesPath);
-      res.send(filesPath);
-    }
-  });
+            console.log(filesPath);
+            res.send(filesPath);
+        }
+    });
 });
 
 //

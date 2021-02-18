@@ -113,12 +113,12 @@ class SettlementSerive {
     }
 
     /**
-     * 取得全行各个国际结算产品的结算量
-     getTotalRangeProductSettlement
+         * 取得全行各个国际结算产品的结算量
+         getTotalRangeProductSettlement
 
-     * @param {*} start 
-     * @param {*} end 
-     */
+         * @param {*} start 
+         * @param {*} end 
+         */
     async getTotalRangeProductSettlement(start, end) {
             let product = [];
             let products = await this.getSettleRangeProductsName();
@@ -364,45 +364,102 @@ class SettlementSerive {
         for (const p of products) {
             product.push(p.name);
         }
-        let sql =
-            "" +
-            " select " +
-            " c.month as month,  " +
-            " case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c,  " +
-            " case when  c.times is null then 0 else c.times end times_c,  " +
-            " case when p.amount is null then 0 else p.amount end amount_p,  " +
-            " case when p.times is null then 0 else p.times end times_p   " +
-            " from   " +
-            " ( select " +
-            " left(busy_date,6) as month, " +
-            " convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
-            " count( product_name) as times  " +
-            " from   " +
-            " settle_record    " +
-            " where     " +
-            "  busy_date>=? and busy_date<=? and product_name in ?   " +
-            "  group by month  ) c" +
-            "  left join  " +
-            " ( select " +
-            " left(date_format(date_add(busy_date,interval  +1 YEAR),'%Y%m%d' ),6) as month, " +
-            " convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
-            " count( product_name) as times  " +
-            " from   " +
-            " settle_record    " +
-            " where     " +
-            "  busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' ) " +
-            " and busy_date <=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )" +
-            " and product_name in ? " +
-            "  group by month    ) p " +
-            "  on c.month=p.month " +
-            "  order by month asc " +
-            "";
-        return await this.query(sql, [
-            start,
-            end, [product],
-            start,
-            end, [product],
-        ]);
+        // let sql =
+        //     "" +
+        //     " select " +
+        //     " c.month as month,  " +
+        //     " case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c,  " +
+        //     " case when  c.times is null then 0 else c.times end times_c,  " +
+        //     " case when p.amount is null then 0 else p.amount end amount_p,  " +
+        //     " case when p.times is null then 0 else p.times end times_p   " +
+        //     " from   " +
+        //     " ( select " +
+        //     " left(busy_date,6) as month, " +
+        //     " convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
+        //     " count( product_name) as times  " +
+        //     " from   " +
+        //     " settle_record    " +
+        //     " where     " +
+        //     "  busy_date>=? and busy_date<=? and product_name in ?   " +
+        //     "  group by month  ) c" +
+        //     "  left join  " +
+        //     " ( select " +
+        //     " left(date_format(date_add(busy_date,interval  +1 YEAR),'%Y%m%d' ),6) as month, " +
+        //     " convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
+        //     " count( product_name) as times  " +
+        //     " from   " +
+        //     " settle_record    " +
+        //     " where     " +
+        //     "  busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' ) " +
+        //     " and busy_date <=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )" +
+        //     " and product_name in ? " +
+        //     "  group by month    ) p " +
+        //     "  on c.month=p.month " +
+        //     "  order by month asc " +
+        //     "";
+
+        // return await this.query(sql, [
+        //     start,
+        //     end, [product],
+        //     start,
+        //     end, [product],
+        // ]);
+
+        let sql = `
+        select 
+	        date_month.month ,
+            case when t1.amount_c is null or t1.amount_c=0 then 0 else convert(t1.amount_c,decimal(20,2)) end amount_c ,
+            case when t1.times_c is null or t1.times_c =0 then 0 else convert(t1.times_c,decimal(20,2)) end times_c,
+	        case when t2.amount_p is null or t2.amount_p=0 then 0 else convert(t2.amount_p,decimal(20,2)) end amount_p ,
+            case when t2.times_p is null or t2.times_p =0 then 0 else convert(t2.times_p,decimal(20,2)) end times_p	
+        FROM
+	        date_month 
+        left join 
+	    (
+		    select 
+			    left(busy_Date,6) as month,
+                sum(busy_Amount*usd_Rate ) as amount_c,
+                count( product_name) as times_c
+		    FROM
+			    settle_record
+		    where 
+			    product_Name in ( select name from product where settleRange="1") 
+			    and 
+			    busy_Date>=?
+			    and 
+			    busy_Date<=? 
+		    GROUP BY
+			    month
+		    ORDER BY
+			    month desc
+	    )t1
+	    on t1.month=date_month.month 
+	
+	    left join 
+	    (
+		    select 
+			    left(date_format(date_add(busy_date,interval  +1 YEAR),'%Y%m%d' ),6) as month,
+                sum(busy_Amount*usd_Rate ) as amount_p,
+                count( product_name) as times_p
+		    FROM
+			    settle_record
+		    where 
+			    product_Name in ( select name from product where settleRange="1") 
+			    and 
+			    busy_Date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )
+			    and 
+			    busy_Date<=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' ) 
+		    GROUP BY
+			    month
+		    ORDER BY
+			    month desc
+	    )t2
+	    on date_month.month=t2.month
+	    WHERE
+		    date_month.month>=left(?,6) and date_month.month <=left(?,6)
+        `;
+
+        return await this.query(sql, [start, end, start, end, start, end]);
     }
 
     /**
@@ -510,6 +567,60 @@ class SettlementSerive {
         ]);
     }
 
+    // getUnitProductMonthSettle
+    /**
+     * 取得支行国际结算量分月统计量
+     */
+    async getUnitProductMonthSettle(start, end, unit, product) {
+        let sql =
+            "" +
+            " select " +
+            "   c.month as month,  " +
+            "   case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c,  " +
+            "   case when  c.times is null then 0 else c.times end times_c,  " +
+            "   case when p.amount is null then 0 else p.amount end amount_p,  " +
+            "   case when p.times is null then 0 else p.times end times_p   " +
+            " from   " +
+            " ( select " +
+            "   left(busy_date,6) as month, " +
+            "   convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
+            "   count( product_name) as times  " +
+            " from   " +
+            "   settle_record    " +
+            " where     " +
+            "   busy_date>=? " +
+            "   and busy_date<=? " +
+            "   and product_name = ?   " +
+            "   and belong_branch_code = ? " +
+            "  group by month   ) c" +
+            "  left join  " +
+            " ( select " +
+            "   left(date_format(date_add(busy_date,interval  +1 YEAR),'%Y%m%d' ),6) as month, " +
+            "   convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
+            "   count( product_name) as times  " +
+            " from   " +
+            "   settle_record    " +
+            " where     " +
+            "   busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' ) " +
+            "   and busy_date <=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )" +
+            "   and product_name = ? " +
+            "   and belong_branch_code = ? " +
+            " group by month   ) p " +
+            " on c.month=p.month " +
+            " order by month asc " +
+            "";
+        return await this.query(sql, [
+            start,
+            end,
+            product,
+            unit,
+            start,
+            end,
+            product,
+            unit,
+        ]);
+    }
+
     /**
      * 取得支行国际结算量分月统计量
      */
@@ -554,7 +665,7 @@ class SettlementSerive {
             "   and belong_branch_code = ? " +
             " group by month   ) p " +
             " on c.month=p.month " +
-            " order by month desc " +
+            " order by month asc " +
             "";
         return await this.query(sql, [
             start,
@@ -712,9 +823,606 @@ class SettlementSerive {
         ]);
     }
 
+    /**
+     * 取得支行各项国际结算产品统计量
+     * @param {*} product
+     */
+    async getUnitProductSettlement(start, end, unit) {
+        let product = [];
+        let products = await this.getSettleRangeProductsName();
+        for (const p of products) {
+            product.push(p.name);
+        }
+
+        let sql =
+            "" +
+            " ( " +
+            " select  " +
+            "   case when c.product_name is null  then p.product_name else c.product_name end product_name, " +
+            "   case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c, " +
+            "   case when c.times is null or c.times=0 then 0 else c.times end times_c, " +
+            "   case when p.amount is null or p.amount=0 then 0 else p.amount end amount_p, " +
+            "   case when p.times is null or p.times=0 then 0 else p.times end times_p " +
+            " from " +
+            " ( " +
+            " select " +
+            "     product_name, " +
+            "     convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount,  " +
+            "     count( product_name) as times   " +
+            "   from  " +
+            "     settle_record " +
+            "   where " +
+            "     busy_date>=?  " +
+            "     and busy_date<=?   " +
+            "     and product_name in  ?   " +
+            "     and belong_branch_code= ?  " +
+            "     group by product_name  " +
+            " ) c   " +
+            " left join    " +
+            " ( " +
+            " select " +
+            "     product_name, " +
+            "     convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount,  " +
+            "     count( product_name) as times   " +
+            "   from  " +
+            "     settle_record " +
+            "   where " +
+            "     busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and busy_date<=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and product_name in ?   " +
+            "     and belong_branch_code= ?  " +
+            "     group by product_name   " +
+            " ) p   " +
+            " on c.product_name=p.product_name  " +
+            " ) " +
+            " union " +
+            " ( " +
+            " select  " +
+            "   case when p.product_name is null  then c.product_name else p.product_name end product_name, " +
+            "   case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c, " +
+            "   case when c.times is null or c.times=0 then 0 else c.times end times_c, " +
+            "   case when p.amount is null or p.amount=0 then 0 else p.amount end amount_p, " +
+            "   case when p.times is null or p.times=0 then 0 else p.times end times_p " +
+            " from " +
+            " ( " +
+            " select " +
+            "     product_name, " +
+            "     convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount,  " +
+            "     count( product_name) as times   " +
+            "   from  " +
+            "     settle_record " +
+            "   where " +
+            "     busy_date>=?  " +
+            "     and busy_date<=?   " +
+            "     and product_name in ?   " +
+            "     and belong_branch_code= ?  " +
+            "     group by product_name  " +
+            " ) c   " +
+            " right join    " +
+            " ( " +
+            " select " +
+            "     product_name, " +
+            "     convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount,  " +
+            "     count( product_name) as times   " +
+            "   from  " +
+            "     settle_record " +
+            "   where " +
+            "     busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and busy_date<=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and product_name in ?   " +
+            "     and belong_branch_code= ?  " +
+            "     group by product_name   " +
+            " ) p   " +
+            " on c.product_name=p.product_name  " +
+            " ) ";
+
+        return await this.query(sql, [
+            start,
+            end, [product],
+            unit,
+            start,
+            end, [product],
+            unit,
+            start,
+            end, [product],
+            unit,
+            start,
+            end, [product],
+            unit,
+        ]);
+    }
+
+    /**
+     * 取得支行特定国际结算产品的办理客户统计量
+     * @param {*} product
+     */
+    async getUnitProductClientSettlement(start, end, unit, product) {
+        let sql =
+            "" +
+            " ( " +
+            " select  " +
+            "   case when c.cust_name is null then p.cust_name else c.cust_name end cust_name," +
+            "   case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c, " +
+            "   case when c.times is null or c.times=0 then 0 else c.times end times_c, " +
+            "   case when p.amount is null or p.amount=0 then 0 else p.amount end amount_p, " +
+            "   case when p.times is null or p.times=0 then 0 else p.times end times_p " +
+            " from " +
+            " ( " +
+            " select " +
+            "     cust_name, " +
+            "     convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount,  " +
+            "     count( product_name) as times   " +
+            "   from  " +
+            "     settle_record " +
+            "   where " +
+            "     busy_date>=?  " +
+            "     and busy_date<=?   " +
+            "     and product_name = ?   " +
+            "     and belong_branch_code= ?  " +
+            "     group by cust_name  " +
+            " ) c   " +
+            " left join    " +
+            " ( " +
+            " select " +
+            "     cust_name, " +
+            "     convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount,  " +
+            "     count( product_name) as times   " +
+            "   from  " +
+            "     settle_record " +
+            "   where " +
+            "     busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and busy_date<=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and product_name = ?   " +
+            "     and belong_branch_code= ?  " +
+            "     group by cust_name   " +
+            " ) p   " +
+            " on c.cust_name=p.cust_name  " +
+            " ) " +
+            " union " +
+            " ( " +
+            " select  " +
+            "   case when c.cust_name is null then p.cust_name else c.cust_name end cust_name," +
+            "   case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c, " +
+            "   case when c.times is null or c.times=0 then 0 else c.times end times_c, " +
+            "   case when p.amount is null or p.amount=0 then 0 else p.amount end amount_p, " +
+            "   case when p.times is null or p.times=0 then 0 else p.times end times_p " +
+            " from " +
+            " ( " +
+            " select " +
+            "     cust_name, " +
+            "     convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount,  " +
+            "     count( product_name) as times   " +
+            "   from  " +
+            "     settle_record " +
+            "   where " +
+            "     busy_date>=?  " +
+            "     and busy_date<=?   " +
+            "     and product_name = ?   " +
+            "     and belong_branch_code= ?  " +
+            "     group by cust_name  " +
+            " ) c   " +
+            " right join    " +
+            " ( " +
+            " select " +
+            "     cust_name, " +
+            "     convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount,  " +
+            "     count( product_name) as times   " +
+            "   from  " +
+            "     settle_record " +
+            "   where " +
+            "     busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and busy_date<=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and product_name = ?   " +
+            "     and belong_branch_code= ?  " +
+            "     group by cust_name   " +
+            " ) p   " +
+            " on c.cust_name=p.cust_name  " +
+            " ) ";
+
+        return await this.query(sql, [
+            start,
+            end,
+            product,
+            unit,
+            start,
+            end,
+            product,
+            unit,
+            start,
+            end,
+            product,
+            unit,
+            start,
+            end,
+            product,
+            unit,
+        ]);
+    }
+
     // getUnitRangeProductSettlement
     /**
-     * 取得支行各个国际结算产品的国际结算量
+     * 取得单个客户的国际结算量
+     * @param {*} product
+     */
+    async getClientSettle(start, end, client) {
+        let product = [];
+        let products = await this.getSettleRangeProductsName();
+        for (const p of products) {
+            product.push(p.name);
+        }
+
+        let sql =
+            "" +
+            " select " +
+            "     c.cust_number," +
+            "     c.cust_name," +
+            "     case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c," +
+            "     case when c.times is null or c.times=0 then 0 else c.times end times_c," +
+            "     case when p.amount is null or p.amount=0 then 0 else p.amount end amount_p," +
+            "     case when p.times is null or p.times=0 then 0 else p.times end times_p" +
+            " from  " +
+            " ( " +
+            " select " +
+            "     cust_number, " +
+            "     cust_name, " +
+            "     convert(sum(usd_rate*busy_amount),decimal(15,2)) as amount, " +
+            "     count(busy_date) as times " +
+            " from" +
+            "     settle_record " +
+            " where " +
+            "     busy_date>=?  " +
+            "     and busy_date<=?   " +
+            "     and product_name in ?   " +
+            "     and cust_number= ?  " +
+            "     group by cust_number  " +
+            " ) c " +
+            " left join " +
+            " ( " +
+            " select " +
+            "     cust_number, " +
+            "     cust_name, " +
+            "     convert(sum(usd_rate*busy_amount),decimal(15,2)) as amount, " +
+            "     count(busy_date) as times " +
+            " from" +
+            "     settle_record " +
+            " where " +
+            "     busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and busy_date<=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and product_name in ?   " +
+            "     and cust_number= ?  " +
+            "     group by cust_number  " +
+            " ) p " +
+            " on c.cust_number=p.cust_number ";
+
+        return await this.query(sql, [
+            start,
+            end, [product],
+            client,
+            start,
+            end, [product],
+            client,
+        ]);
+    }
+
+    // getUnitRangeProductSettlement
+    /**
+     * 取得所有客户的国际结算量
+     * @param {*} product
+     */
+    async getAllClientSettle(start, end) {
+        let product = [];
+        let products = await this.getSettleRangeProductsName();
+        for (const p of products) {
+            product.push(p.name);
+        }
+
+        let sql =
+            "" +
+            " select " +
+            "     c.cust_number," +
+            "     c.cust_name," +
+            "     case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c," +
+            "     case when c.times is null or c.times=0 then 0 else c.times end times_c," +
+            "     case when p.amount is null or p.amount=0 then 0 else p.amount end amount_p," +
+            "     case when p.times is null or p.times=0 then 0 else p.times end times_p" +
+            " from  " +
+            " ( " +
+            " select " +
+            "     cust_number, " +
+            "     cust_name, " +
+            "     convert(sum(usd_rate*busy_amount),decimal(15,2)) as amount, " +
+            "     count(busy_date) as times " +
+            " from" +
+            "     settle_record " +
+            " where " +
+            "     busy_date>=?  " +
+            "     and busy_date<=?   " +
+            "     and product_name in ?   " +
+            "     group by cust_number  " +
+            " ) c " +
+            " left join " +
+            " ( " +
+            " select " +
+            "     cust_number, " +
+            "     cust_name, " +
+            "     convert(sum(usd_rate*busy_amount),decimal(15,2)) as amount, " +
+            "     count(busy_date) as times " +
+            " from" +
+            "     settle_record " +
+            " where " +
+            "     busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and busy_date<=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and product_name in ?   " +
+            "     group by cust_number  " +
+            " ) p " +
+            " on c.cust_number=p.cust_number ";
+
+        return await this.query(sql, [
+            start,
+            end, [product],
+            start,
+            end, [product],
+        ]);
+    }
+
+    // getUnitRangeProductSettlement
+    /**
+     * 取得单个客户的国际结算量
+     * @param {*} product
+     */
+    async getClientSettle(start, end, client) {
+        let product = [];
+        let products = await this.getSettleRangeProductsName();
+        for (const p of products) {
+            product.push(p.name);
+        }
+
+        let sql =
+            "" +
+            " select " +
+            "     c.cust_number," +
+            "     c.cust_name," +
+            "     case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c," +
+            "     case when c.times is null or c.times=0 then 0 else c.times end times_c," +
+            "     case when p.amount is null or p.amount=0 then 0 else p.amount end amount_p," +
+            "     case when p.times is null or p.times=0 then 0 else p.times end times_p" +
+            " from  " +
+            " ( " +
+            " select " +
+            "     cust_number, " +
+            "     cust_name, " +
+            "     convert(sum(usd_rate*busy_amount),decimal(15,2)) as amount, " +
+            "     count(busy_date) as times " +
+            " from" +
+            "     settle_record " +
+            " where " +
+            "     busy_date>=?  " +
+            "     and busy_date<=?   " +
+            "     and product_name in ?   " +
+            "     and cust_number= ?  " +
+            "     group by cust_number  " +
+            " ) c " +
+            " left join " +
+            " ( " +
+            " select " +
+            "     cust_number, " +
+            "     cust_name, " +
+            "     convert(sum(usd_rate*busy_amount),decimal(15,2)) as amount, " +
+            "     count(busy_date) as times " +
+            " from" +
+            "     settle_record " +
+            " where " +
+            "     busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and busy_date<=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
+            "     and product_name in ?   " +
+            "     and cust_number= ?  " +
+            "     group by cust_number  " +
+            " ) p " +
+            " on c.cust_number=p.cust_number ";
+
+        return await this.query(sql, [
+            start,
+            end, [product],
+            client,
+            start,
+            end, [product],
+            client,
+        ]);
+    }
+
+    /**
+     * 取得客户国际结算量分月统计量
+     * @param {*} product
+     */
+    async getClientMonthSettle(start, end, client) {
+        let product = [];
+        let products = await this.getSettleRangeProductsName();
+        for (const p of products) {
+            product.push(p.name);
+        }
+        let sql1=`
+        select 
+        
+        from
+            date_month
+        
+        `;
+
+        let sql =
+            "" +
+            "" +
+            " select " +
+            "     c.month as month,  " +
+            "     case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c,  " +
+            "     case when  c.times is null then 0 else c.times end times_c,  " +
+            "     case when p.amount is null then 0 else p.amount end amount_p,  " +
+            "     case when p.times is null then 0 else p.times end times_p   " +
+            " from   " +
+            " (  " +
+            "    select " +
+            "       left(busy_date,6) as month, " +
+            "       convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
+            "       count( product_name) as times  " +
+            "   from   " +
+            "       settle_record    " +
+            "   where     " +
+            "       busy_date>=?    " +
+            "       and busy_date<=?  " +
+            "       and product_name in ?   " +
+            "       and cust_number = ?   " +
+            "   group by month   " +
+            " ) c" +
+            "  left join  " +
+            " (  " +
+            "    select " +
+            "       left(date_format(date_add(busy_date,interval  +1 YEAR),'%Y%m%d' ),6) as month, " +
+            "       convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
+            "       count( product_name) as times  " +
+            "   from   " +
+            "       settle_record    " +
+            "   where     " +
+            "       busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' ) " +
+            "     and busy_date <=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )" +
+            "     and product_name in ? " +
+            "     and cust_number=  ? " +
+            "  group by month    " +
+            " ) p " +
+            "  on c.month=p.month " +
+            "  order by month asc " +
+            "";
+
+        return await this.query(sql, [
+            start,
+            end, [product],
+            client,
+            start,
+            end, [product],
+            client,
+        ]);
+    }
+
+    /**
+     * 取得客户某项国际结算量分月统计量
+     * @param {*} product
+     */
+    async getClientProductMonthSettlebyname(start, end, client, product) {
+            let sql =
+                "" +
+                "" +
+                " select " +
+                "     c.month as month,  " +
+                "     case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c,  " +
+                "     case when  c.times is null then 0 else c.times end times_c,  " +
+                "     case when p.amount is null then 0 else p.amount end amount_p,  " +
+                "     case when p.times is null then 0 else p.times end times_p   " +
+                " from   " +
+                " (  " +
+                "    select " +
+                "       left(busy_date,6) as month, " +
+                "       convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
+                "       count( product_name) as times  " +
+                "   from   " +
+                "       settle_record    " +
+                "   where     " +
+                "       busy_date>=?    " +
+                "       and busy_date<=?  " +
+                "       and product_name = ?     " +
+                "       and cust_name like ? " +
+                "   group by month   " +
+                " ) c" +
+                "  left join  " +
+                " (  " +
+                "    select " +
+                "       left(date_format(date_add(busy_date,interval  +1 YEAR),'%Y%m%d' ),6) as month, " +
+                "       convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
+                "       count( product_name) as times  " +
+                "   from   " +
+                "       settle_record    " +
+                "   where     " +
+                "       busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' ) " +
+                "     and busy_date <=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )" +
+                "     and product_name = ? " +
+                "     and cust_name like ? " +
+                "  group by month    " +
+                " ) p " +
+                "  on c.month=p.month " +
+                "  order by month asc " +
+                "";
+
+            return await this.query(sql, [
+                start,
+                end,
+                product,
+                "%" + client + "%",
+                start,
+                end,
+                product,
+                "%" + client + "%",
+            ]);
+        }
+        /**
+         * 取得客户某项国际结算量分月统计量
+         * @param {*} product
+         */
+    async getClientProductMonthSettle(start, end, client, product) {
+        let sql =
+            "" +
+            "" +
+            " select " +
+            "     c.month as month,  " +
+            "     case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c,  " +
+            "     case when  c.times is null then 0 else c.times end times_c,  " +
+            "     case when p.amount is null then 0 else p.amount end amount_p,  " +
+            "     case when p.times is null then 0 else p.times end times_p   " +
+            " from   " +
+            " (  " +
+            "    select " +
+            "       left(busy_date,6) as month, " +
+            "       convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
+            "       count( product_name) as times  " +
+            "   from   " +
+            "       settle_record    " +
+            "   where     " +
+            "       busy_date>=?    " +
+            "       and busy_date<=?  " +
+            "       and product_name = ?     " +
+            "       and cust_number like ? " +
+            "   group by month   " +
+            " ) c" +
+            "  left join  " +
+            " (  " +
+            "    select " +
+            "       left(date_format(date_add(busy_date,interval  +1 YEAR),'%Y%m%d' ),6) as month, " +
+            "       convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
+            "       count( product_name) as times  " +
+            "   from   " +
+            "       settle_record    " +
+            "   where     " +
+            "       busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' ) " +
+            "     and busy_date <=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )" +
+            "     and product_name = ? " +
+            "     and cust_number like ? " +
+            "  group by month    " +
+            " ) p " +
+            "  on c.month=p.month " +
+            "  order by month asc " +
+            "";
+
+        return await this.query(sql, [
+            start,
+            end,
+            product,
+            "%" + client + "%",
+            start,
+            end,
+            product,
+            "%" + client + "%",
+        ]);
+    }
+
+    // getUnitRangeProductSettlement
+    /**
+     * 取得的各国际结算产品的统计量
      * @param {*} product
      */
     async getUnitRangeProductSettlement(start, end, unit) {
@@ -822,137 +1530,6 @@ class SettlementSerive {
         ]);
     }
 
-    // getUnitRangeProductSettlement
-    /**
-     * 取得单个客户的国际结算量
-     * @param {*} product
-     */
-    async getClientSettle(start, end, client) {
-        let product = [];
-        let products = await this.getSettleRangeProductsName();
-        for (const p of products) {
-            product.push(p.name);
-        }
-
-        let sql =
-            "" +
-            " select " +
-            "     c.cust_number," +
-            "     c.cust_name," +
-            "     case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c," +
-            "     case when c.times is null or c.times=0 then 0 else c.times end times_c," +
-            "     case when p.amount is null or p.amount=0 then 0 else p.amount end amount_p," +
-            "     case when p.times is null or p.times=0 then 0 else p.times end times_p" +
-            " from  " +
-            " ( " +
-            " select " +
-            "     cust_number, " +
-            "     cust_name, " +
-            "     convert(sum(usd_rate*busy_amount),decimal(15,2)) as amount, " +
-            "     count(busy_date) as times " +
-            " from" +
-            "     settle_record " +
-            " where " +
-            "     busy_date>=?  " +
-            "     and busy_date<=?   " +
-            "     and product_name in ?   " +
-            "     and cust_number= ?  " +
-            "     group by cust_number  " +
-            " ) c " +
-            " left join " +
-            " ( " +
-            " select " +
-            "     cust_number, " +
-            "     cust_name, " +
-            "     convert(sum(usd_rate*busy_amount),decimal(15,2)) as amount, " +
-            "     count(busy_date) as times " +
-            " from" +
-            "     settle_record " +
-            " where " +
-            "     busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
-            "     and busy_date<=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )   " +
-            "     and product_name in ?   " +
-            "     and cust_number= ?  " +
-            "     group by cust_number  " +
-            " ) p " +
-            " on c.cust_number=p.cust_number ";
-
-        return await this.query(sql, [
-            start,
-            end, [product],
-            client,
-            start,
-            end, [product],
-            client,
-        ]);
-    }
-
-    // getUnitRangeProductSettlement
-    /**
-     * 取得客户国际结算量分月统计量
-     * @param {*} product
-     */
-    async getClientMonthSettle(start, end, client) {
-        let product = [];
-        let products = await this.getSettleRangeProductsName();
-        for (const p of products) {
-            product.push(p.name);
-        }
-
-        let sql =
-            "" +
-            "" +
-            " select " +
-            "     c.month as month,  " +
-            "     case when c.amount is null or c.amount=0 then 0 else c.amount end amount_c,  " +
-            "     case when  c.times is null then 0 else c.times end times_c,  " +
-            "     case when p.amount is null then 0 else p.amount end amount_p,  " +
-            "     case when p.times is null then 0 else p.times end times_p   " +
-            " from   " +
-            " (  " +
-            "    select " +
-            "       left(busy_date,6) as month, " +
-            "       convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
-            "       count( product_name) as times  " +
-            "   from   " +
-            "       settle_record    " +
-            "   where     " +
-            "       busy_date>=?    " +
-            "       and busy_date<=?  " +
-            "       and product_name in ?   " +
-            "       and cust_number = ?   " +
-            "   group by month   " +
-            " ) c" +
-            "  left join  " +
-            " (  " +
-            "    select " +
-            "       left(date_format(date_add(busy_date,interval  +1 YEAR),'%Y%m%d' ),6) as month, " +
-            "       convert(sum( usd_rate * busy_amount ),decimal(15,2)) as amount, " +
-            "       count( product_name) as times  " +
-            "   from   " +
-            "       settle_record    " +
-            "   where     " +
-            "       busy_date>=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' ) " +
-            "     and busy_date <=date_format(date_add(?,interval  -1 YEAR),'%Y%m%d' )" +
-            "     and product_name in ? " +
-            "     and cust_number=  ? " +
-            "  group by month    " +
-            " ) p " +
-            "  on c.month=p.month " +
-            "  order by month desc " +
-            "";
-
-        return await this.query(sql, [
-            start,
-            end, [product],
-            client,
-            start,
-            end, [product],
-            client,
-        ]);
-    }
-
-    // getUnitRangeProductSettlement
     /**
      * 取得客户的各国际结算产品的统计量
      * @param {*} product

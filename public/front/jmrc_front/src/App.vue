@@ -8,10 +8,7 @@
 import axios from "axios";
 export default {
   mounted() {
-    axios.get("https://linzhenhuan.net/login/checkAuth").then(result => {
-      console.log("result name");
-      console.log(result.data);
-      this.$router.push("/settlement");
+    axios.get("/login/checkAuth").then(result => {
       if (result.data.name != undefined) {
         this.$store.state.authUser.name = result.data.name;
         this.$store.state.authUser.id = result.data.id;

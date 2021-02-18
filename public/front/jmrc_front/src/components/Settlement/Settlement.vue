@@ -13,13 +13,10 @@
       <el-input v-model="start" placeholder="开始日期" class="input"></el-input>
       <el-input v-model="end" placeholder="结束日期" class="input"></el-input>
       <el-button type="primary" class="btn" @click="query">查询</el-button>
-      <el-button type="primary" class="btn" @click="query">new window</el-button>
       <el-tag type="warning">日期格式(年月日)：20190731</el-tag>
     </div>
 
-    <total v-show="this.level == '全行'" ref="total"></total>
-    <unit v-show="this.level == '经营单位'" ref="unit"></unit>
-    <client v-show="this.level == '客户'" ref="client"></client>
+      <component :is="levelpanel" :params="params" @reback="reback"  :ref="settlementpanel"></component>
   </div>
 </template>
 <script>
@@ -49,7 +46,9 @@ export default {
     return {
       start: "",
       end: "",
+      params:{},
       level: "",
+      levelpanel: "",
       selectedValue: "",
       options: [
         { value: "全行", label: "全行" },
@@ -59,32 +58,32 @@ export default {
     };
   },
   methods: {
+
+    reback(p){
+      console.log(p);
+    },
     changeLevel(value) {
       this.level = value;
+        this.params.start=this.start;
+        this.params.end=this.end;
       if (this.level == "全行") {
-        this.$refs.total.query(this.start, this.end);
+        this.levelpanel="total";
+
       }
       if (this.level == "经营单位") {
-        this.$refs.unit.query(this.start, this.end);
+        this.levelpanel="unit";
+     
       }
       if (this.level == "客户") {
-        this.$refs.client.query(this.start, this.end);
+        this.levelpanel="client";
+     
       }
     },
 
     async query() {
-      if (this.level == "全行") {
-        this.$refs.total.query(this.start, this.end);
-      }
-      if (this.level == "经营单位") {
-        this.$refs.unit.query(this.start, this.end);
-      }
-      if (this.level == "客户") {
-        this.$refs.client.query(this.start, this.end);
-      }
-    }
+      this.$refs.settlementpanel.query(this.start,this.end);
   }
-};
+  }}
 </script>
 
 <style scoped>

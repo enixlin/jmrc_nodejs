@@ -1,23 +1,30 @@
 {
-  "name": "jmrc-node",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "start": "node ./bin/www"
-  },
-  "dependencies": {
-    "async": "^3.2.0",
-    "cookie-parser": "~1.4.4",
-    "debug": "~2.6.9",
-    "ejs": "~2.6.1",
-    "express": "~4.16.1",
-    "express-session": "^1.17.0",
-    "formidable": "^1.2.2",
-    "http-errors": "~1.6.3",
-    "morgan": "~1.9.1",
-    "mysql": "^2.17.1",
-    "mysql2": "^2.1.0",
-    "passport": "^0.4.1",
-    "passport-local": "^1.0.0"
-  }
+    "name": "jmrc-node",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "start": "node ./bin/www"
+    },
+    "dependencies": {
+        "async": "^3.2.0",
+        "cookie-parser": "~1.4.4",
+        "debug": "~2.6.9",
+        "ejs": "~2.6.1",
+        "express": "~4.16.1",
+        "express-session": "^1.17.0",
+        "formidable": "^1.2.2",
+        "http-errors": "~1.6.3",
+        "morgan": "~1.9.1",
+        "mysql": "^2.17.1",
+        "mysql2": "^2.1.0",
+        "passport": "^0.4.1",
+        "passport-local": "^1.0.0"
+    },
+    "apidoc": {
+        "title": "国际业务办公助手后台API",
+        "url": "https://linzhenhuan.net/"
+    }
+
+
+
 }

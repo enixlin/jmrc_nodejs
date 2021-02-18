@@ -1,215 +1,11 @@
 <template>
   <div id="total">
-    <!-- 左则展示区 任务完成率进度条 + 分月图 -->
-    <div id="chart" class="chart">
-      <!-- 整 体数据展示区（总量，同比，不包括任务完成率进度条） -->
-      <div id="settleInfo" class="settleInfo">
-        <div id="recordDate" class="infobox">
-          数据日期：
-          <div style="text-align:center;">
-            <br />
-            <font color="purple" size="5">
-              {{ this.recordDate_year }}年{{ this.recordDate_month }}月{{
-              this.recordDate_day
-              }}日
-            </font>
-          </div>
-        </div>
+    {{ params.start }}--{{ params.end }}
+    <!-- 展示整体国际结算量情况 -->
+    <TotalInfo :params="params"></TotalInfo>
 
-        <div id="total" class="infobox_orange">
-          国际结算总量
-          <div style="text-align:center;">
-            <br />
-            <font color="blue" size="5">{{ number_format(this.totalSettle_c / 10000, 0) }}万美元</font>
-          </div>
-        </div>
-        <br />
-        <div id="complete" class="infobox_blue">
-          同比变化：
-          <template v-if="this.totalSettle_c - this.totalSettle_p > 0">
-            <div style="text-align:center;">
-              <br />
-              <font color="white" size="5">
-                +{{
-                number_format(
-                (this.totalSettle_c - this.totalSettle_p) / 10000,
-                0
-                )
-                }}万美元
-              </font>
-            </div>
-          </template>
-          <template v-else>
-            <div style="text-align:center;">
-              <br />
-              <font color="yellow" size="5">
-                {{
-                number_format(
-                (this.totalSettle_c - this.totalSettle_p) / 10000,
-                0
-                )
-                }}万美元
-              </font>
-            </div>
-          </template>
-        </div>
-
-        <div id="complete" class="infobox_purple">
-          同比幅度：
-          <template v-if="this.totalSettle_c - this.totalSettle_p > 0">
-            <div style="text-align:center;">
-              <br />
-              <font color="white" size="5">
-                +{{
-                number_format(
-                ((this.totalSettle_c - this.totalSettle_p) /
-                this.totalSettle_p) *
-                100,
-                2
-                )
-                }}%
-              </font>
-            </div>
-          </template>
-          <template v-else>
-            <div style="text-align:center">
-              <br />
-              <font color="yellow" size="5">
-                {{
-                number_format(
-                ((this.totalSettle_c - this.totalSettle_p) /
-                this.totalSettle_p) *
-                100,
-                2
-                )
-                }}%
-              </font>
-            </div>
-          </template>
-        </div>
-      </div>
-      <div id="progress" class="progress_circle">
-        <el-progress
-          type="circle"
-          style="margin-top:25px
-          "
-          :percentage="
-            number_format(
-              (this.totalSettle_c / 10000 / this.totalTask) * 100,
-              2
-            )
-          "
-        ></el-progress>
-        <div style="width:120px;float:left;text-align:center;margin:5px 0px">
-          <font color="black" size="5">完成率</font>
-          <br />
-          <br />
-        </div>
-      </div>
-      <!--国际结算量分月柱状图 -->
-      <div id="monthbarchart" class="monthbarchart"></div>
-    </div>
-
-    <!-- 各产品的统计表格 -->
-    <div id="productTable" class="productTable">
-      <!-- 导出表格按钮 -->
-      <el-button type="primary" @click="exportTable">导出表格</el-button>
-      <el-table
-        :data="this.productsSettle"
-        :row-style="{ height: '30px' }"
-        :cell-style="{ padding: 0 }"
-        :stripe="true"
-        height="450px"
-        show-summary="this.showsummary"
-        :summary-method="getSummaries"
-        :highlight-current-row="true"
-        ref="table"
-        style="width: 510px;  overflow: auto;font-size: 8px ;text-align:center;"
-        border
-      >
-        <el-table-column prop="name" label="产品名称" width="100" sortable header-align="center">
-          <template slot-scope="scope">
-            <font size="1">{{ scope.row.name }}</font>
-          </template>
-        </el-table-column>
-        <el-table-column label="笔数" width="60" prop="times_c" sortable header-align="center">
-          <template style="align:right" slot-scope="scope">
-            <p align="right" margin="0px">
-              <font size="1">{{ number_format(scope.row.times_c, 0) }}</font>
-            </p>
-          </template>
-        </el-table-column>
-        <el-table-column prop="amount_c" label="金额" width="90" sortable header-align="center">
-          <template style="align:right" slot-scope="scope">
-            <p align="right" margin="0px">
-              <font size="1">{{ number_format(scope.row.amount_c / 10000, 2) }}</font>
-            </p>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="times_compare"
-          label="同比笔数"
-          width="60"
-          sortable
-          header-align="center"
-        >
-          <template style="text-align:right" slot-scope="scope">
-            <p align="right" margin="0px">
-              <font
-                v-if="scope.row.times_c - scope.row.times_p > 0"
-                color="green"
-                size="1"
-              >{{ number_format(scope.row.times_c - scope.row.times_p, 0) }}</font>
-            </p>
-            <p align="right" margin="0px">
-              <font
-                v-if="scope.row.times_c - scope.row.times_p < 0"
-                color="red"
-                size="1"
-              >{{ number_format(scope.row.times_c - scope.row.times_p, 0) }}</font>
-            </p>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="amount_compare"
-          label="同比金额"
-          width="90"
-          sortable
-          header-align="center"
-        >
-          <template style="text-align:right" slot-scope="scope">
-            <p align="right" margin="0px">
-              <font v-if="scope.row.amount_c - scope.row.amount_p > 0" color="green" size="1">
-                {{
-                number_format(
-                (scope.row.amount_c - scope.row.amount_p) / 10000,
-                2
-                )
-                }}
-              </font>
-            </p>
-            <p align="right" margin="0px">
-              <font v-if="scope.row.amount_c - scope.row.amount_p < 0" color="red" size="1">
-                {{
-                number_format(
-                (scope.row.amount_c - scope.row.amount_p) / 10000,
-                2
-                )
-                }}
-              </font>
-            </p>
-          </template>
-        </el-table-column>
-        <el-table-column header-align="center" width="100" align="center" label="操作">
-          <template slot-scope="scope">
-            <i class="el-icon-s-custom" @click="total_product_client(scope.$index, scope.row)"></i>-
-            <i class="el-icon-menu" @click="total_product_unit(scope.$index, scope.row)"></i>-
-            <i class="el-icon-data-analysis" @click="total_product_month(scope.$index, scope.row)"></i>
-          </template>
-        </el-table-column>
-      </el-table>
-    </div>
-    <window v-for="(item ,index) in windows" :key="index"></window>
+    <button @click="reback">click</button>
+    <!-- <window></window> -->
   </div>
 </template>
 
@@ -218,50 +14,52 @@
 <script>
 import axios from "axios";
 import echarts from "echarts";
-import window from "./Win";
+// import window from "./Window";
 import eventBus from "./../../Utils/EventBus";
+
+import TotalInfo from "@/components/Settlement/TotalInfor.vue";
+// import Window from './Window.vue';
 
 export default {
   data() {
     return {
-      recordDate: "",
-      recordDate_day: "",
-      recordDate_year: "",
-      recordDate_month: "",
-      totalTask: "",
-      totalMonth: "",
-      totalSettle_c: "",
-      productsSettle: "",
-      totalSettle_p: "",
-      showsummary: "false",
-      windows: [],
-      activeWindow: ""
+      date: { start: "", end: "" },
     };
   },
+  props: ["params"],
   mounted() {
+    console.log("settlement_total mounted");
     let me = this;
     eventBus.$on("closeWindow", function(arg) {
       me.removeWindow(arg);
     });
   },
   components: {
-    window: window
+    // window,
+    TotalInfo,
   },
   created: {},
   methods: {
-    removeWindow(title) {
-      console.log("close window");
-
-      let windows = this.editableTabs;
-      let activewindow = this.activeWindow;
-      if (activewindow === title) {
-        windows.forEach((win, index) => {
-          if (win.name === title) {
-            let nextWin = win[index + 1] || win[index - 1];
-            if (nextWin) {
-              activewindow = nextWin.name;
-            }
-          }
+    reback() {
+      this.$emit("reback", "return");
+    },
+    //打开客户统计窗口
+    getProductClientSettlement(index, row) {
+      //查询办理这项产品的客户的业务量统计
+      console.log(row.name);
+      let Params = {
+        title: row.name + "--客户业务量统计表",
+      };
+      let flag = this.$refs.windowsContainer.isExist(Params);
+      if (!flag) {
+        let postUrl = "/settlement//getProductClientSettlement";
+        let params = { product: row.name, start: this.start, end: this.end };
+        axios.post(postUrl, params).then((result) => {
+          let windowParams = {
+            title: row.name + "--客户业务量统计表",
+            data: result.data,
+          };
+          this.$refs.windowsContainer.add(windowParams);
         });
       }
     },
@@ -273,31 +71,34 @@ export default {
      * 当选择层次为全时，按查询按钮执行的操作
      */
     async query(start, end) {
+      console.log("settlement_total query run....");
+      this.$data.start = start;
+      this.$data.end = end;
       //取得数据日期
       let recordDate = await axios.get("/settlement/getSettleRecordDate");
       console.log(this.recordDate);
       // 取得国际结算总量
       let totalSettle = await axios.post("/settlement/getTotalSettle", {
         start: start,
-        end: end
+        end: end,
       });
       console.log(this.totalSettle);
       // 取得国际结算量任务
       let totalTask = await axios.post("/settlement/getTotalSettleTask", {
-        end: end
+        end: end,
       });
       // 取得各个国际结算产品的业务量
       let productsSettle = await axios.post(
         "/settlement/getTotalRangeProductSettlement",
         {
           end: end,
-          start: start
+          start: start,
         }
       );
       // 将数据转化一下，添加同比数据
       let array = productsSettle.data;
       let array_new = [];
-      array.forEach(e => {
+      array.forEach((e) => {
         array_new.push({
           name: e.name,
           amount_c: e.amount_c,
@@ -305,7 +106,7 @@ export default {
           amount_p: e.amount_p,
           times_p: e.times_p,
           amount_compare: e.amount_c - e.amount_p,
-          times_compare: e.times_c - e.times_p
+          times_compare: e.times_c - e.times_p,
         });
       });
       this.productsSettle = array_new;
@@ -313,7 +114,7 @@ export default {
       // 取得国际结算量的分月数据
       let totalMonth = await axios.post("/settlement/getTotalMonthSettle", {
         end: end,
-        start: start
+        start: start,
       });
       console.log(totalMonth.data);
       let data = totalMonth.data;
@@ -322,7 +123,7 @@ export default {
       let amount_p_list = [];
       let times_c_list = [];
       let times_p_list = [];
-      data.forEach(e => {
+      data.forEach((e) => {
         monthlist.push(e.month);
         amount_c_list.push((e.amount_c / 10000).toFixed(2));
         amount_p_list.push((e.amount_p / 10000).toFixed(2));
@@ -335,11 +136,16 @@ export default {
       myChart.setOption({
         title: {
           text:
-            "国际结算量的分月图" + ":（" + start + "-" + end + ",单位：万美元）"
+            "国际结算量的分月图" +
+            ":（" +
+            start +
+            "-" +
+            end +
+            ",单位：万美元）",
         },
         grid: {
           left: 100,
-          right: 80
+          right: 80,
         },
         legend: {
           type: "scroll",
@@ -347,24 +153,24 @@ export default {
           right: 200,
           bottom: 10,
           data: ["当年", "去年同期"],
-          selected: ["当年", "去年同期"]
+          selected: ["当年", "去年同期"],
         },
         tooltip: {
           trigger: "axis",
           axisPointer: {
-            type: "cross"
-          }
+            type: "cross",
+          },
         },
         axisPointer: {
           show: true,
           link: { xAxisIndex: "all" },
           label: {
-            backgroundColor: "#777"
-          }
+            backgroundColor: "#777",
+          },
         },
 
         xAxis: {
-          data: monthlist
+          data: monthlist,
         },
         yAxis: {},
         series: [
@@ -373,24 +179,24 @@ export default {
             type: "bar",
             itemStyle: {
               normal: {
-                color: "#4daff0"
-              }
+                color: "#4daff0",
+              },
             },
             data: amount_c_list,
-            barGap: "2%"
+            barGap: "2%",
           },
           {
             name: "去年同期",
             type: "bar",
             itemStyle: {
               normal: {
-                color: "#888888"
-              }
+                color: "#888888",
+              },
             },
             data: amount_p_list,
-            barGap: "2%"
-          }
-        ]
+            barGap: "2%",
+          },
+        ],
       });
 
       this.totalMonth = totalMonth.data;
@@ -401,20 +207,6 @@ export default {
       this.recordDate_year = this.recordDate.substring(0, 4);
       this.recordDate_month = this.recordDate.substring(4, 6);
       this.recordDate_day = this.recordDate.substring(6, 8);
-    },
-    //查询办理该项产品的所有客户
-    total_product_client(index, row) {
-      console.log(row, index);
-      this.windows.push(row);
-      console.log(this.windows);
-
-      // this.product_client_dialogs.push(row);
-      // this.dialogshow = true;
-      // console.log(this.product_client_dialogs);
-    },
-
-    first() {
-      this.style.zIndex = 100;
     },
 
     /**
@@ -441,8 +233,8 @@ export default {
           sums[index] = "";
           return;
         }
-        const values = data.map(item => Number(item[column.property]));
-        if (!values.every(value => isNaN(value))) {
+        const values = data.map((item) => Number(item[column.property]));
+        if (!values.every((value) => isNaN(value))) {
           sums[index] = values.reduce((prev, curr) => {
             const value = Number(curr);
             if (!isNaN(value)) {
@@ -491,8 +283,8 @@ export default {
         s[1] += new Array(prec - s[1].length + 1).join("0");
       }
       return s.join(dec);
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -600,5 +392,14 @@ p {
 }
 .current-row > td {
   background: rgba(252, 33, 241, 0.219) !important;
+}
+
+.drag-handle {
+  width: 98%;
+  height: 30px;
+  margin: 3px;
+  padding: 3px;
+  background: #888888;
+  z-index: 100;
 }
 </style>

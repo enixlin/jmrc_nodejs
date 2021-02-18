@@ -11,27 +11,27 @@ var http = require("http");
 var https = require("https");
 var fs = require("fs");
 //https请求
-const httpsOption = {
-    key: fs.readFileSync("./public/httpskey/2_linzhenhuan.net.key"),
-    cert: fs.readFileSync("./public/httpskey/1_linzhenhuan.net_bundle.crt"),
-};
+// const httpsOption = {
+//     key: fs.readFileSync("./public/httpskey/2_linzhenhuan.net.key"),
+//     cert: fs.readFileSync("./public/httpskey/1_linzhenhuan.net_bundle.crt"),
+// };
 
 var port = normalizePort(process.env.PORT || "3000");
 app.set("port", port);
-var server = https.createServer(httpsOption, app).listen(443);
+// var server = https.createServer(httpsOption, app).listen(443);
 
 /**
  * Create HTTP server.
  */
 
-// var server = http.createServer(app);
+var server = http.createServer(app);
 // var server = https.createServer(app);
 
 /**
  * Listen on provided port, on all network interfaces.
  */
 
-// server.listen(port);
+server.listen(port);
 server.on("error", onError);
 server.on("listening", onListening);
 

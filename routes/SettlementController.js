@@ -7,6 +7,32 @@ var SettlementService = new ss();
 /////////////////////////////////////////////////////////////
 
 //取得国际结算量数据的最近日期
+/**
+ * @api {get} settle/getSettleRecordDate  取得国际结算量数据的最近日期
+ * @apiName getSettleRecordDate
+ * @apiGroup settle
+ *
+ *
+ * @apiSuccess {string} name 易融资各项产品的业务名称.
+ * @apiSuccess {string} type 易融资各项产品的业务表内外标志.
+ * @apiSuccess {string} balance_rmx_c 易融资各项产品的业务当期余额-综合人民币.
+ *
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "name": "信用证",
+ *     }
+ *
+ * @apiError UserNotFound The id of the User was not found.
+ *
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *
+ *     }
+ */
+//取得最新的业务日期
 router.all("/getSettleRecordDate", async(req, res, next) => {
     res.send(await SettlementService.getSettleRecordDate());
 });
@@ -127,6 +153,49 @@ router.all("/getUnitMonthSettle", async(req, res, next) => {
     res.send(await SettlementService.getUnitMonthSettle(start, end, unit));
 });
 
+// 取得支行单项产品国际结算量分月统计量;
+router.all("/getUnitProductMonthSettle", async(req, res, next) => {
+    let start = req.body.start;
+    let end = req.body.end;
+    let unit = req.body.unit;
+    let product = req.body.product;
+    console.log(start);
+    console.log(end);
+    res.send(
+        await SettlementService.getUnitProductMonthSettle(start, end, unit, product)
+    );
+});
+
+// 取得支行各项产品国际结算量统计量;
+router.all("/getUnitProductSettlement", async(req, res, next) => {
+    let start = req.body.start;
+    let end = req.body.end;
+    let unit = req.body.unit;
+    console.log(start);
+    console.log(end);
+    console.log(unit);
+    res.send(await SettlementService.getUnitProductSettlement(start, end, unit));
+});
+
+// 取得支行各项产品国际结算量统计量;
+router.all("/getUnitProductClientSettlement", async(req, res, next) => {
+    let start = req.body.start;
+    let end = req.body.end;
+    let unit = req.body.unit;
+    let product = req.body.product;
+    console.log(start);
+    console.log(end);
+    console.log(unit);
+    res.send(
+        await SettlementService.getUnitProductClientSettlement(
+            start,
+            end,
+            unit,
+            product
+        )
+    );
+});
+
 // 取得支行各个客户的国际结算量
 router.all("/getUnitCientSettle", async(req, res, next) => {
     let start = req.body.start;
@@ -158,6 +227,15 @@ router.all("/getClientSettle", async(req, res, next) => {
     res.send(await SettlementService.getClientSettle(start, end, client));
 });
 
+//取得所有客户的国际结算量
+router.all("/getAllClientSettle", async(req, res, next) => {
+    let start = req.body.start;
+    let end = req.body.end;
+    console.log(start);
+    console.log(end);
+    res.send(await SettlementService.getAllClientSettle(start, end));
+});
+
 // 取得客户国际结算量分月统计量;
 router.all("/getClientMonthSettle", async(req, res, next) => {
     let start = req.body.start;
@@ -167,6 +245,46 @@ router.all("/getClientMonthSettle", async(req, res, next) => {
     console.log(end);
     res.send(await SettlementService.getClientMonthSettle(start, end, client));
 });
+// getClientProductMonthSettlebyname
+// 取得客户某项国际结算量分月统计量;
+router.all("/getClientProductMonthSettlebyname", async(req, res, next) => {
+    let start = req.body.start;
+    let end = req.body.end;
+    let client = req.body.client;
+    let product = req.body.product;
+    console.log(start);
+    console.log(end);
+    console.log(client);
+    console.log(product);
+    res.send(
+        await SettlementService.getClientProductMonthSettlebyname(
+            start,
+            end,
+            client,
+            product
+        )
+    );
+});
+// 取得客户某项国际结算量分月统计量;
+router.all("/getClientProductMonthSettle", async(req, res, next) => {
+    let start = req.body.start;
+    let end = req.body.end;
+    let client = req.body.client;
+    let product = req.body.product;
+    console.log(start);
+    console.log(end);
+    console.log(client);
+    console.log(product);
+    res.send(
+        await SettlementService.getClientProductMonthSettle(
+            start,
+            end,
+            client,
+            product
+        )
+    );
+});
+
 // 取得客户的各国际结算产品的统计量;
 router.all("/getClientRangeProductSettlement", async(req, res, next) => {
     let start = req.body.start;
